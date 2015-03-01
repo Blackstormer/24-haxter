@@ -2,15 +2,20 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -18,7 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
 public class Game {
-	private static JPanel questionPanel;
+	private static ImagePanel questionPanel;
 	
 	private static JFrame window;
 	private static JPanel cardsPanel;
@@ -33,18 +38,23 @@ public class Game {
 	
 	private static ImageCanvas canvas;
 	
-	private static Font augustus18 = null;
-	private static Font augustus12 = null;
+	public static Font augustus18 = null;
+	public static Font augustus12 = null;
+	public static Font augustus30 = null;
 	
 	private static boolean questionsVisible = true;
 	
 	private static StageHandler stages = new StageHandler();
+	
+	public static final String[] buttonNames = new String[] {"button_fire", "button_agriculture", "button_writing", "button_metal", "button_money", "button_math", "button_engineering", "button_vaccines", "button_electricity", "button_internet", "button_future"};
+	public static BufferedImage button = ImageLoader.getImage(buttonNames[0]);
 		
 	public static void main(String[] args) {
 		try {
-			augustus18 = augustus12 = Font.createFont(Font.TRUETYPE_FONT, new File("bin/fonts/AUGUSTUS.TTF"));
+			augustus30 = augustus18 = augustus12 = Font.createFont(Font.TRUETYPE_FONT, new File("bin/fonts/AUGUSTUS.TTF"));
 		} catch (Exception e) {}
 		
+		augustus30 = augustus30.deriveFont(30.0f);
 		augustus18 = augustus18.deriveFont(18.0f);
 		augustus12 = augustus12.deriveFont(12.0f);
 		
@@ -54,7 +64,7 @@ public class Game {
 		cardsPanel = new JPanel();
 		cardsPanel.setLayout(new CardLayout());
 		
-		questionPanel = new JPanel();
+		questionPanel = new ImagePanel(ImageLoader.getImage("1"));
 		questionPanel.setBackground(Color.white);
 		questionPanel.setLayout(new BoxLayout(questionPanel, BoxLayout.Y_AXIS));
 		questionPanel.setName("QuestionPanel");
@@ -89,8 +99,11 @@ public class Game {
 		questionPanel.add(Box.createVerticalStrut(10));
 		JPanel qButtons = new JPanel();
 		qButtons.setLayout(new BoxLayout(qButtons, BoxLayout.X_AXIS));
-		qButtons.setBackground(Color.white);
-		submit = new JButton("Submit");
+		submit = new JButton("");
+		button = resize(button);
+		submit.setBorder(BorderFactory.createEmptyBorder());
+		submit.setContentAreaFilled(false);
+		submit.setIcon(new ImageIcon(button));
 		class CheckAnswer implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -108,13 +121,18 @@ public class Game {
 		
 		window.add(cardsPanel);
 		window.setSize(1024, 768);
+		window.setResizable(false);
 		window.setVisible(true);
+		
+		SoundUtil.loopSound("music", 0.0f);
 		
 		switchPanels();
 		canvas.setRenderText("The world as we know it has been shaped for the past millennia by omnipotent beings. Behind the scenes they are behind the biggest advances in history. This is your turn, shape your world. As you answer questions your world prospers and grows, when you fail your world does too.");
-		new DelayThread(5000).run();
+		new DelayThread(10000, true).run();
 		newQuestion();
 		questionPanel.update(questionPanel.getGraphics());
+		
+		SoundUtil.loopSound(stages.getSound(), stages.getSoundLevel());
 	}
 	
 	private static String[] genQuestion() {
@@ -123,18 +141,34 @@ public class Game {
 		String title = article[0];
 		String sentence = article[1];
 		
-		String[] titleParts = title.split(" ");
-		for (String s : titleParts) {
-			String replace = "";
-			for (int i = 0; i < s.length(); i++)
-				replace += "_";
-			sentence = sentence.replaceAll("(?i)" + s, replace);
-		}
-		
-		System.out.println(sentence.trim());
-		
-		if (sentence.trim().length() == 0)
+		if (sentence.trim().length() == 0 || title.contains("list") || title.contains("List") || sentence.contains("may refer to"))
 			return genQuestion();
+		
+		String[] titleParts = title.split(" ");
+		ArrayList<String> parts = new ArrayList<String>();
+		for (int i = 0; i < titleParts.length; i++) {
+			if (titleParts[i].contains(","))
+				titleParts[i] = titleParts[i].replace(",", " ");
+			parts.add(titleParts[i].trim());
+		}
+		class StringComparator implements Comparator<String> {
+			@Override
+			public int compare(String o1, String o2) {
+				return o1.length() - o2.length();
+			}
+			
+		}
+		Collections.sort(parts, new StringComparator());
+		try {
+			for (String s : parts) {
+				if (validTitleWord(s)) {
+					String replace = "";
+					for (int i = 0; i < s.length(); i++)
+						replace += "_";
+					sentence = sentence.replaceAll("(?i)" + s, replace);
+				}
+			}
+		} catch (Exception e) { return genQuestion(); }
 		
 		return new String[] {title, sentence};
 	}
@@ -149,13 +183,14 @@ public class Game {
 		
 		if (selected.getText().equals(currentAnswers.get(correctAnswer))) {
 			selected.setBackground(Color.green);
-			new DelayThread(2000).run();
+			questionPanel.update(questionPanel.getGraphics());
+			new DelayThread(2000, true).run();
 			canvas.setRGB(0);
 			canvas.setRenderText(stages.getNextStageText());
 			canvas.setBufferedImage(stages.nextImage());
 			canvas.update(canvas.getGraphics());
-			new DelayThread(5000).run();
-			newQuestion();
+			SoundUtil.loopSound(stages.getSound(), stages.getSoundLevel());
+			new DelayThread(10000, true).run();
 		} else {
 			JRadioButton right = null;
 			for (JRadioButton b : buttons)
@@ -163,7 +198,13 @@ public class Game {
 					right = b;
 			right.setBackground(Color.green);
 			selected.setBackground(Color.red);
+			questionPanel.update(questionPanel.getGraphics());
+			new DelayThread(2000, false).run();
 		}
+		questionPanel.setImage(ImageLoader.getImage(stages.image()));
+		button = resize(button);
+		submit.setIcon(new ImageIcon(button));
+		newQuestion();
 	}
 	
 	public static void switchPanels() {
@@ -201,5 +242,22 @@ public class Game {
 		
 		currentAnswers = l;
 		correctAnswer = l.indexOf(answers[0]);
+		questionPanel.update(questionPanel.getGraphics());
+	}
+	
+	private static BufferedImage resize(BufferedImage bi) {
+		Image tmp = bi.getScaledInstance(200, 48, BufferedImage.SCALE_FAST);
+		BufferedImage buffered = new BufferedImage(200, 48, BufferedImage.TYPE_INT_RGB);
+		buffered.getGraphics().drawImage(tmp, 0, 0, null);
+		return buffered;
+	}
+	
+	private static boolean validTitleWord(String word) {
+		String[] no = new String[] {"the", "a", "an", "of", "in", "on", "i", "and", "for"};
+		for (String s : no) {
+			if (s.equalsIgnoreCase(word))
+				return false;
+		}
+		return true;
 	}
 }

@@ -1,8 +1,10 @@
 public class DelayThread extends Thread {
 	private int delay;
+	private boolean switchPanel;
 	
-	public DelayThread(int delay) {
+	public DelayThread(int delay, boolean switchPanel) {
 		this.delay = delay;
+		this.switchPanel = switchPanel;
 	}
 	
 	@Override
@@ -10,6 +12,7 @@ public class DelayThread extends Thread {
 		try {
 			sleep(delay);
 		} catch (Exception e) {}
-		Game.switchPanels();
+		if (switchPanel)
+			Game.switchPanels();
 	}
 }

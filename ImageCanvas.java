@@ -29,6 +29,7 @@ public class ImageCanvas extends JComponent {
 		super.paintComponent(g);
 		g.drawImage(image, 0, 0, null);
 		g.setColor(new Color(rgb, rgb, rgb));
-		g.drawString(renderText, 50, 50);
+		g.setFont(Game.augustus30);
+		TextWrap.wrap(renderText, new Color(rgb, rgb, rgb), Game.augustus30, g, 40);
 	}
 }
