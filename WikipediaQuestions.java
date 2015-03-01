@@ -5,7 +5,7 @@ import java.net.URL;
 import java.net.URLConnection;
 
 public class WikipediaQuestions {
-	private static String getFirstSentence(String pageName) {
+	public static String[] getFirstSentence(String pageName) {
 		//"http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&&titles=United_States"
 		String url = "http://en.wikipedia.org/wiki/" + pageName;
 		try {
@@ -38,15 +38,13 @@ public class WikipediaQuestions {
 				paragraph = paragraph.trim();
 				int firstSentence = paragraph.indexOf(". ");
 				paragraph = paragraph.substring(0, firstSentence + 1);
-				System.out.println(title.substring(7, title.length() - 42));
-				return paragraph;
+				return new String[] {title.substring(7, title.length() - 42), paragraph};
 		    }
 		} catch (Exception e) {}
 		return null;
 	}
 	
-	/*
-	public static void main(String[] args) {
-		System.out.println(getFirstSentence("Special:Random"));
-	} */
+	public static String getOtherAnswer() {
+		return getFirstSentence("Special:Random")[0];
+	}
 }
