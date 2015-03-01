@@ -1,7 +1,6 @@
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -17,7 +16,12 @@ public class WikipediaQuestions {
 		        boolean found = false;
 		        boolean done = false;
 		        String paragraph = "";
+		        String title = null;
+		        boolean titleFound = false;
 				for (String line; (line = reader.readLine()) != null;) {
+					if (!titleFound && line.contains("<title>")) {
+						title = line;
+					}
 		            if (!found && line.contains("<p>")) {
 		            	found = true;
 		            	paragraph += line;
@@ -34,13 +38,15 @@ public class WikipediaQuestions {
 				paragraph = paragraph.trim();
 				int firstSentence = paragraph.indexOf(". ");
 				paragraph = paragraph.substring(0, firstSentence + 1);
+				System.out.println(title.substring(7, title.length() - 42));
 				return paragraph;
 		    }
 		} catch (Exception e) {}
 		return null;
 	}
 	
+	/*
 	public static void main(String[] args) {
 		System.out.println(getFirstSentence("Special:Random"));
-	}
+	} */
 }
