@@ -32,7 +32,7 @@ public class StageHandler {
 	/**
 	 * Array of volume levels for each sound
 	 */
-	private static final float[] soundLevels = new float[] {-12.0f, -11.0f, -16.0f, -7.0f, -15.0f, -15.0f, -12.0f, -12.0f, -15.0f, -15.0f, -15.0f, -15.0f, -15.0f};
+	private static final float[] soundLevels = new float[] {-12.0f, -11.0f, -16.0f, -7.0f, -15.0f, -15.0f, -12.0f, -12.0f, -15.0f, -15.0f, -15.0f, -15.0f, -19.0f};
 	
 	/**
 	 * Number of stages completed
@@ -57,10 +57,17 @@ public class StageHandler {
 		return images[numCompleted];
 	}
 	
+	/**
+	 * Add another to the total questions attempted
+	 */
 	public void anotherTried() {
 		numTried++;
 	}
 	
+	/**
+	 * 
+	 * @return The number of questions attempted
+	 */
 	public int getNumTried() {
 		return numTried;
 	}

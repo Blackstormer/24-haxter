@@ -67,17 +67,17 @@ public class Game {
 	/**
 	 * Manages the different stages of the game
 	 */
-	private static StageHandler stages = new StageHandler();
+	public static StageHandler stages = new StageHandler();
 	
 	// Button images for display
 	public static final String[] buttonNames = new String[] {"button_fire", "button_tools", "button_agriculture", "button_writing", "button_metal", "button_money", "button_math", "button_engineering", "button_vaccines", "button_electricity", "button_internet", "button_future"};
 	public static BufferedImage button = ImageLoader.getImage(buttonNames[0]);
 	
 	/**
-	 * Main method: sets up window and starts game
+	 * Sets up window and starts game
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public static void init() {
 		try {
 			augustus30 = augustus18 = augustus16 = Font.createFont(Font.TRUETYPE_FONT, new File(Game.class.getClass().getResource("/fonts/AUGUSTUS.TTF").getFile()));
 		} catch (Exception e) {}
@@ -89,7 +89,7 @@ public class Game {
 			augustus16 = augustus16.deriveFont(16.0f);
 		}
 		
-		window = new JFrame("HackExeter");
+		window = new JFrame("The Quest For Knowledge");
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		// Uses a JPanel with a CardLayout for switching between panels
@@ -165,18 +165,17 @@ public class Game {
 		SoundUtil.loopSound("music", 0.0f);
 		
 		switchPanels();
-		
+				
 		// Beginning text
 		canvas.setRenderText("The world as we know it has been shaped for the past millennia by omnipotent beings. Behind the scenes they are behind the biggest advances in history. This is your turn, shape your world. As you answer questions your world prospers and grows, when you fail your world does too.");
 		
-		// 10 second delay for reading
+		// Begins playing the first stage-specific looping sound
+		SoundUtil.loopSound(stages.getSound(), stages.getSoundLevel());
+		canvas.update(canvas.getGraphics());
 		new DelayThread(7000, true).run();
 		newQuestion();
 		stages.anotherTried();
 		questionPanel.update(questionPanel.getGraphics());
-		
-		// Begins playing the first stage-specific looping sound
-		SoundUtil.loopSound(stages.getSound(), stages.getSoundLevel());
 	}
 	
 	/**
@@ -239,7 +238,7 @@ public class Game {
 			b.setBackground(Color.white);
 		}
 
-		if (StageHandler.NUM_STAGES > stages.getNumTried() + 1) {
+		if (StageHandler.NUM_STAGES > stages.getNumTried()) {
 			if (selected.getText().equals(currentAnswers.get(correctAnswer))) {
 				// Correct answer
 				selected.setBackground(Color.green);
@@ -251,6 +250,11 @@ public class Game {
 				canvas.setRenderText(stages.getNextStageText());
 				canvas.setBufferedImage(stages.nextImage());
 				canvas.update(canvas.getGraphics());
+				
+				// Game ends
+				if (stages.getNumCompleted() == 12) {
+					return;
+				}
 				
 				// Plays new stage sound
 				SoundUtil.loopSound(stages.getSound(), stages.getSoundLevel());
@@ -265,6 +269,13 @@ public class Game {
 				selected.setBackground(Color.red);
 				questionPanel.update(questionPanel.getGraphics());
 				new DelayThread(2000, false).run();
+			}
+		} else {
+			if (stages.getNumCompleted() >= 12) {
+				return;
+			} else {
+				new GameOver();
+				closeFrame();
 			}
 		}
 		questionPanel.setImage(ImageLoader.getImage(stages.image()));
@@ -351,5 +362,9 @@ public class Game {
 				return false;
 		}
 		return true;
+	}
+	
+	private static void closeFrame() {
+		window.dispose();
 	}
 }
