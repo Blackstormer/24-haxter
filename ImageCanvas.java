@@ -1,9 +1,10 @@
-import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
-public class ImageCanvas extends Canvas {
+import javax.swing.JComponent;
+
+public class ImageCanvas extends JComponent {
 	private static final long serialVersionUID = 1L;
 	
 	private String renderText = "";
@@ -20,10 +21,12 @@ public class ImageCanvas extends Canvas {
 	
 	public void setBufferedImage(String name) {
 		image = ImageLoader.getImage(name);
+		update(this.getGraphics());
 	}
 	
 	@Override
-	public void paint(Graphics g) {
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
 		g.drawImage(image, 0, 0, null);
 		g.setColor(new Color(rgb, rgb, rgb));
 		g.drawString(renderText, 50, 50);

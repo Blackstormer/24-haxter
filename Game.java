@@ -111,10 +111,10 @@ public class Game {
 		window.setVisible(true);
 		
 		switchPanels();
-		canvas.setRenderText("test");
-		switchPanels();
+		canvas.setRenderText("The world as we know it has been shaped for the past millennia by omnipotent beings. Behind the scenes they are behind the biggest advances in history. This is your turn, shape your world. As you answer questions your world prospers and grows, when you fail your world does too.");
+		new DelayThread(5000).run();
 		newQuestion();
-		questionPanel.repaint();
+		questionPanel.update(questionPanel.getGraphics());
 	}
 	
 	private static String[] genQuestion() {
@@ -149,11 +149,12 @@ public class Game {
 		
 		if (selected.getText().equals(currentAnswers.get(correctAnswer))) {
 			selected.setBackground(Color.green);
-			switchPanels();
+			new DelayThread(2000).run();
 			canvas.setRGB(0);
 			canvas.setRenderText(stages.getNextStageText());
 			canvas.setBufferedImage(stages.nextImage());
-			switchPanels();
+			canvas.update(canvas.getGraphics());
+			new DelayThread(5000).run();
 			newQuestion();
 		} else {
 			JRadioButton right = null;
@@ -175,15 +176,6 @@ public class Game {
 			questionsVisible = true;
 		}
 	}
-	
-	/*
-	public static void currentPanel() {
-		for (Component c : cardsPanel.getComponents()) {
-			if (c.isVisible())
-				System.out.println(c.getName());
-		}
-	}
-	*/
 	
 	private static void newQuestion() {
 		for (JRadioButton b : buttons) {
