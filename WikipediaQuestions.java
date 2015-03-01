@@ -6,7 +6,6 @@ import java.net.URLConnection;
 
 public class WikipediaQuestions {
 	public static String[] getFirstSentence(String pageName) {
-		//"http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&&titles=United_States"
 		String url = "http://en.wikipedia.org/wiki/" + pageName;
 		try {
 			URLConnection connection = new URL(url).openConnection();

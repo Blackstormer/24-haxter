@@ -1,7 +1,7 @@
+import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
-import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -21,10 +21,11 @@ public class Game {
 	private static JPanel questionPanel;
 	
 	private static JFrame window;
+	private static JPanel cardsPanel;
 	private static JLabel title;
 	private static JRadioButton answerA, answerB, answerC, answerD;
 	private static JRadioButton[] buttons;
-	private static JButton newQuestion, checkAnswer;
+	private static JButton submit;
 	private static ButtonGroup choices;
 	
 	private static ArrayList<String> currentAnswers;
@@ -35,9 +36,13 @@ public class Game {
 	private static Font augustus18 = null;
 	private static Font augustus12 = null;
 	
+	private static boolean questionsVisible = true;
+	
+	private static StageHandler stages = new StageHandler();
+		
 	public static void main(String[] args) {
 		try {
-			augustus18 = augustus12 = Font.createFont(Font.TRUETYPE_FONT, new File("bin/AUGUSTUS.TTF"));
+			augustus18 = augustus12 = Font.createFont(Font.TRUETYPE_FONT, new File("bin/fonts/AUGUSTUS.TTF"));
 		} catch (Exception e) {}
 		
 		augustus18 = augustus18.deriveFont(18.0f);
@@ -46,9 +51,13 @@ public class Game {
 		window = new JFrame("HackExeter");
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
+		cardsPanel = new JPanel();
+		cardsPanel.setLayout(new CardLayout());
+		
 		questionPanel = new JPanel();
 		questionPanel.setBackground(Color.white);
 		questionPanel.setLayout(new BoxLayout(questionPanel, BoxLayout.Y_AXIS));
+		questionPanel.setName("QuestionPanel");
 		title = new JLabel();
 		title.setFont(augustus18);
 		answerA = new JRadioButton();
@@ -81,58 +90,31 @@ public class Game {
 		JPanel qButtons = new JPanel();
 		qButtons.setLayout(new BoxLayout(qButtons, BoxLayout.X_AXIS));
 		qButtons.setBackground(Color.white);
-		newQuestion = new JButton("New Question");
-		class NewQuestion implements ActionListener {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				for (JRadioButton b : buttons) {
-					b.setBackground(Color.white);
-				}
-				
-				String[] parts = genQuestion();
-				title.setText(parts[1]);
-				title.setBackground(Color.white);
-				String[] answers = new String[4];
-				answers[0] = parts[0];
-				answers[1] = WikipediaQuestions.getOtherAnswer();
-				answers[2] = WikipediaQuestions.getOtherAnswer();
-				answers[3] = WikipediaQuestions.getOtherAnswer();
-				ArrayList<String> l = new ArrayList<String>();
-				for (int i = 0; i < 4; i++)
-					l.add(answers[i]);
-				Collections.shuffle(l);
-				answerA.setText(l.get(0));
-				answerB.setText(l.get(1));
-				answerC.setText(l.get(2));
-				answerD.setText(l.get(3));
-				
-				currentAnswers = l;
-				correctAnswer = l.indexOf(answers[0]);
-			}
-		}
-		newQuestion.addActionListener(new NewQuestion());
-		qButtons.add(newQuestion);
-		qButtons.add(Box.createHorizontalStrut(10));
-		checkAnswer = new JButton("Check Answer");
+		submit = new JButton("Submit");
 		class CheckAnswer implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				check();
 			}
 		}
-		checkAnswer.addActionListener(new CheckAnswer());
-		qButtons.add(checkAnswer);
+		submit.addActionListener(new CheckAnswer());
+		qButtons.add(submit);
 		questionPanel.add(qButtons);
-		window.add(questionPanel);
-
-		/*
-		canvas = new ImageCanvas();
-		window.add(canvas);
-		window.remove(canvas);
-		*/
+		cardsPanel.add(questionPanel, "questions");
 		
-		window.setSize(1280, 200);
+		canvas = new ImageCanvas();
+		canvas.setName("Canvas");
+		cardsPanel.add(canvas, "canvas");
+		
+		window.add(cardsPanel);
+		window.setSize(1024, 768);
 		window.setVisible(true);
+		
+		switchPanels();
+		canvas.setRenderText("test");
+		switchPanels();
+		newQuestion();
+		questionPanel.repaint();
 	}
 	
 	private static String[] genQuestion() {
@@ -167,6 +149,12 @@ public class Game {
 		
 		if (selected.getText().equals(currentAnswers.get(correctAnswer))) {
 			selected.setBackground(Color.green);
+			switchPanels();
+			canvas.setRGB(0);
+			canvas.setRenderText(stages.getNextStageText());
+			canvas.setBufferedImage(stages.nextImage());
+			switchPanels();
+			newQuestion();
 		} else {
 			JRadioButton right = null;
 			for (JRadioButton b : buttons)
@@ -175,5 +163,51 @@ public class Game {
 			right.setBackground(Color.green);
 			selected.setBackground(Color.red);
 		}
+	}
+	
+	public static void switchPanels() {
+		CardLayout l = (CardLayout) cardsPanel.getLayout();
+		if (questionsVisible) {
+			l.show(cardsPanel, "canvas");
+			questionsVisible = false;
+		} else {
+			l.show(cardsPanel, "questions");
+			questionsVisible = true;
+		}
+	}
+	
+	/*
+	public static void currentPanel() {
+		for (Component c : cardsPanel.getComponents()) {
+			if (c.isVisible())
+				System.out.println(c.getName());
+		}
+	}
+	*/
+	
+	private static void newQuestion() {
+		for (JRadioButton b : buttons) {
+			b.setBackground(Color.white);
+		}
+		
+		String[] parts = genQuestion();
+		title.setText(parts[1]);
+		title.setBackground(Color.white);
+		String[] answers = new String[4];
+		answers[0] = parts[0];
+		answers[1] = WikipediaQuestions.getOtherAnswer();
+		answers[2] = WikipediaQuestions.getOtherAnswer();
+		answers[3] = WikipediaQuestions.getOtherAnswer();
+		ArrayList<String> l = new ArrayList<String>();
+		for (int i = 0; i < 4; i++)
+			l.add(answers[i]);
+		Collections.shuffle(l);
+		answerA.setText(l.get(0));
+		answerB.setText(l.get(1));
+		answerC.setText(l.get(2));
+		answerD.setText(l.get(3));
+		
+		currentAnswers = l;
+		correctAnswer = l.indexOf(answers[0]);
 	}
 }
