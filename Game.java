@@ -1,7 +1,10 @@
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -15,6 +18,8 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
 public class Game {
+	private static JPanel questionPanel;
+	
 	private static JFrame window;
 	private static JLabel title;
 	private static JRadioButton answerA, answerB, answerC, answerD;
@@ -22,42 +27,57 @@ public class Game {
 	private static JButton newQuestion, checkAnswer;
 	private static ButtonGroup choices;
 	
-	private static ArrayList currentAnswers;
+	private static ArrayList<String> currentAnswers;
 	private static int correctAnswer;
 	
+	private static ImageCanvas canvas;
+	
+	private static Font augustus18 = null;
+	private static Font augustus12 = null;
+	
 	public static void main(String[] args) {
+		try {
+			augustus18 = augustus12 = Font.createFont(Font.TRUETYPE_FONT, new File("bin/AUGUSTUS.TTF"));
+		} catch (Exception e) {}
+		
+		augustus18 = augustus18.deriveFont(18.0f);
+		augustus12 = augustus12.deriveFont(12.0f);
+		
 		window = new JFrame("HackExeter");
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		JPanel panel = new JPanel();
-		panel.setBackground(Color.white);
-		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		questionPanel = new JPanel();
+		questionPanel.setBackground(Color.white);
+		questionPanel.setLayout(new BoxLayout(questionPanel, BoxLayout.Y_AXIS));
 		title = new JLabel();
+		title.setFont(augustus18);
 		answerA = new JRadioButton();
 		answerB = new JRadioButton();
 		answerC = new JRadioButton();
 		answerD = new JRadioButton();
 		buttons = new JRadioButton[] {answerA, answerB, answerC, answerD};
-		for (JRadioButton b : buttons)
+		for (JRadioButton b : buttons) {
 			b.setBackground(Color.white);
+			b.setFont(augustus12);
+		}
 		choices = new ButtonGroup();
 		choices.add(answerA);
 		choices.add(answerB);
 		choices.add(answerC);
 		choices.add(answerD);
-		panel.add(title);
+		questionPanel.add(title);
 		title.setAlignmentX(Component.CENTER_ALIGNMENT);
 		title.setBackground(Color.white);
-		panel.add(Box.createVerticalStrut(10));
-		panel.add(answerA);
-		panel.add(answerB);
-		panel.add(answerC);
-		panel.add(answerD);
+		questionPanel.add(Box.createVerticalStrut(10));
+		questionPanel.add(answerA);
+		questionPanel.add(answerB);
+		questionPanel.add(answerC);
+		questionPanel.add(answerD);
 		answerA.setAlignmentX(Component.CENTER_ALIGNMENT);
 		answerB.setAlignmentX(Component.CENTER_ALIGNMENT);
 		answerC.setAlignmentX(Component.CENTER_ALIGNMENT);
 		answerD.setAlignmentX(Component.CENTER_ALIGNMENT);
-		panel.add(Box.createVerticalStrut(10));
+		questionPanel.add(Box.createVerticalStrut(10));
 		JPanel qButtons = new JPanel();
 		qButtons.setLayout(new BoxLayout(qButtons, BoxLayout.X_AXIS));
 		qButtons.setBackground(Color.white);
@@ -102,14 +122,18 @@ public class Game {
 		}
 		checkAnswer.addActionListener(new CheckAnswer());
 		qButtons.add(checkAnswer);
-		panel.add(qButtons);
-		window.add(panel);
+		questionPanel.add(qButtons);
+		window.add(questionPanel);
+
+		/*
+		canvas = new ImageCanvas();
+		window.add(canvas);
+		window.remove(canvas);
+		*/
 		
 		window.setSize(1280, 200);
 		window.setVisible(true);
 	}
-	
-	
 	
 	private static String[] genQuestion() {
 		String[] article = WikipediaQuestions.getFirstSentence("Special:Random");
